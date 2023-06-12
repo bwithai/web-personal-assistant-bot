@@ -13,8 +13,8 @@ from starlette.middleware.cors import CORSMiddleware
 
 from schemas import AssistantDoResponse
 from utils import get_chunks
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 # app
 app = FastAPI(

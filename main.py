@@ -43,13 +43,15 @@ api_key = os.environ['OPENAI_API_KEY']
 
 
 async def train_assistant(chunks):
-    global ConversationalChain
-    global db
-    global chain
     global chat_history
 
+    model_name = 'text-embedding-ada-002'
+
     # Perform the training process
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(
+        model=model_name,
+        openai_api_key=api_key
+    )
     db = FAISS.from_documents(chunks, embeddings)
     chain = load_qa_chain(ChatOpenAI(temperature=0.9), chain_type="stuff")
     ConversationalChain = ConversationalRetrievalChain.from_llm(

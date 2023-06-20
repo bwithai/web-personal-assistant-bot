@@ -12,10 +12,12 @@ from langchain.schema import (
     SystemMessage
 )
 from tqdm import tqdm
+from dotenv import load_dotenv
+load_dotenv()
 
-chat = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2, max_tokens=500)
+api_key = os.environ['OPENAI_API_KEY']
+chat = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2, max_tokens=500, openai_api_key=api_key)
 
-openai.api_key = os.environ['OPENAI_API_KEY']
 
 
 def load_text(file_path):

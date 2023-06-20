@@ -11,10 +11,11 @@ from langchain.document_loaders import PyPDFLoader
 from langchain.embeddings import OpenAIEmbeddings
 from starlette.middleware.cors import CORSMiddleware
 
+from infiniteGPT import process_chunks
 from schemas import AssistantDoResponse
-from utils import get_chunks
-# from dotenv import load_dotenv
-# load_dotenv()
+from utils import get_chunks, remove_duplicates
+from dotenv import load_dotenv
+load_dotenv()
 
 # app
 app = FastAPI(
@@ -92,11 +93,15 @@ async def load_and_split_pdf_files(files: List[UploadFile]) -> dict[str, str]:
             # Delete the temporary file
             os.remove(file_path)
 
-    # Update the global_chunks variable
-    chunks = get_chunks(pages)
+    # Write pages to a file
+    with open("uploads/data.txt", "w") as f:
+        f.write('\n'.join(str(page) for page in pages))
 
-    # Train Assistant
-    await train_assistant(chunks)
+    input_file = "uploads/data.txt"
+    output_file = "uploads/clean_data.txt"
+    process_chunks(input_file, output_file)
+
+    remove_duplicates(output_file)
 
     return {
         "message": "Files uploaded and trained successfully",

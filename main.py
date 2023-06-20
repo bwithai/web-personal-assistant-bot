@@ -1,4 +1,5 @@
 import os
+import pickle
 
 from typing import List
 
@@ -57,6 +58,9 @@ async def train_assistant(chunks):
     ConversationalChain = ConversationalRetrievalChain.from_llm(
         ChatOpenAI(model_name='gpt-3.5-turbo', temperature=0.7, openai_api_key=api_key), db.as_retriever()
     )
+
+    with open('uploads/model_data.pkl', 'wb') as file:
+        pickle.dump((db, chain, ConversationalChain), file)
     # Clear chat history after training
     chat_history.clear()
 
@@ -105,6 +109,8 @@ async def load_and_split_pdf_files(files: List[UploadFile]) -> dict[str, str]:
 
     remove_duplicates(output_file)
 
+    await train_assistant(output_file)
+
     return {
         "message": "Files uploaded and trained successfully",
     }
@@ -112,15 +118,7 @@ async def load_and_split_pdf_files(files: List[UploadFile]) -> dict[str, str]:
 
 @app.post("/api/v1/query")
 async def request_query(query: AssistantDoResponse):
-    global db
-    global chain
-    global ConversationalChain
     global chat_history
-
-    if db is None:
-        return {
-            "message": "train your model first",
-        }
 
     actual_text = query.query
 
@@ -128,10 +126,19 @@ async def request_query(query: AssistantDoResponse):
     full_text = '\n'.join([f"{question}\n{answer}" for question, answer in chat_history])
     full_text += f"\n{actual_text}"
 
-    docs = db.similarity_search(actual_text)
-    chain.run(input_documents=docs, question=full_text)
+    with open('uploads/model_data.pkl', 'rb') as file:
+        db, chain, ConversationalChain = pickle.load(file)
 
-    result = ConversationalChain({"question": full_text, "chat_history": chat_history})
+        if db is None:
+            return {
+                "message": "train your model first",
+            }
+
+        docs = db.similarity_search(actual_text)
+        chain.run(input_documents=docs, question=full_text)
+
+        result = ConversationalChain({"question": full_text, "chat_history": chat_history})
+
     response_text = result['answer']
     chat_history.append((actual_text, response_text))
 

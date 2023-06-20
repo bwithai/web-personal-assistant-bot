@@ -6,7 +6,7 @@ tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
 # Create a text splitter instance
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=600,
+    chunk_size=1000,
     chunk_overlap=200,
     length_function=lambda x: len(tokenizer.encode(x))
 )
